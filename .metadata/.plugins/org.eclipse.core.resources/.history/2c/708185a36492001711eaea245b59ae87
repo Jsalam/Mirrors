@@ -1,0 +1,181 @@
+import java.util.ArrayList;
+
+import processing.core.PApplet;
+import processing.core.PConstants;
+import processing.core.PImage;
+import processing.serial.Serial;
+
+public class Potrero {
+	private int energia;
+	private PApplet app;
+	private ArrayList<Cabra> cabras;
+	private int cabrasFallecidas = 0;
+	private boolean inicializado = false;
+	private PImage pantano;
+	//private Serial serial;
+
+	private int timer, time, timePo, timeOr;
+
+	private int luzFoto;
+
+	public Potrero(PApplet app) {
+		this.app = app;
+		System.out.println();
+		cabras = new ArrayList<Cabra>();
+		pantano = app.loadImage("../data/dataMine/Pantano Final.png");
+
+		//serial = new Serial(app, Serial.list()[6], 9600);
+
+	}
+
+	/**
+	 * el potrero se pobla con un 5 cabras. Se invoca UNA SOLA VEZ
+	 */
+	public void init() {
+		if (!inicializado) {
+			energia = 0000;
+			for (int i = 0; i < 5; i++) {
+				cabras.add(new Cabra(this));
+			}
+			inicializado = true;
+		}
+	}
+
+	/*
+	 * pinta los elementos graficos
+	 */
+	public void draw() {
+		app.imageMode(PConstants.CENTER);
+		app.image(pantano, Logica.widthL/2, Logica.heightL/2);
+		timer();
+		for (int i = 0; i < cabras.size(); i++) {
+			Cabra cabra = cabras.get(i);
+			cabra.pintar();
+			cabra.existir(app);
+//			int cabra = cabra.setEnergia(energia);
+			removeCabra(cabra);
+		}
+		
+	}
+
+	public void administrarCabra(int code) {
+		if (code == PConstants.UP) {
+			addCabra();
+		} else if (code == PConstants.DOWN) {
+			removeCabra();
+		}
+	}
+
+	/**
+	 * Adiciona una cabra
+	 */
+	public void addCabra() {
+		cabras.add(new Cabra(this));
+	}
+
+	/**
+	 * Remueve la cabra mas vieja
+	 */
+	public void removeCabra() {
+		if (cabras.size() > 0) {
+			cabras.remove(cabras.get(0));
+			cabrasFallecidas++;
+
+		}
+	}
+
+	/**
+	 * Este metodo se debe usar cuando una cabra muere de hambre
+	 * 
+	 * @param cabra
+	 *            la cabra que debe removerse del arreglo
+	 */
+	public void removeCabra(Cabra cabra) {
+		// Remover la cabra que recibe como parametro del arreglo
+		if (cabra.isConVida() == false) {
+			cabras.remove(cabra);
+		}
+
+		cabrasFallecidas++;
+	}
+
+	private int tomarLuz() {
+//		while (serial.available() > 0) {
+//			try {
+//				luzFoto = Integer.parseInt(serial.readString());
+//			} catch (Exception e) {
+//
+//			}
+////			System.out.println(luzFoto);
+//			return luzFoto;
+//		}
+		return 0;
+	}
+
+	public void timer() {
+		if (app.millis() - timer >= 1000) {
+			timer = app.millis();
+			time++;
+		}
+	}
+
+	/**
+	 * Este metodo recibe la cantidad de segundos que ha transcurrido desde que
+	 * inició el juego (no desde que inicio la aplicacion). Cada 10 segundos la
+	 * energía del potrero disminuye en x unidades por cada cabra que haya en el
+	 * potrero. Las unidades estan definidas en la variable consumoEnergíaCabra
+	 * 
+	 * @param time
+	 */
+	public void actualizarEnergia() {
+		int TotalEnergia = 0;
+		for (int i = 0; i < cabras.size(); i++) {
+			Cabra cabra = cabras.get(i);
+			int quitoEner = cabra.setEnergia(energia);
+			TotalEnergia += quitoEner;
+		}
+		if (TotalEnergia >0) {
+			System.out.println(TotalEnergia);			
+			energia -= TotalEnergia;
+		}
+		if (energia < 0) {
+			energia = 0;
+		}
+	}
+
+	/**
+	 * Este método debe tomar la lectura de la fotocelda y acumularla en una
+	 * variable. La acumulación se hace una vez por segundo. El potrero no tiene
+	 * límite de acumulación de energía.
+	 */
+	public void addEnergia() {
+		// Escribir el código aqui
+		tomarLuz();
+		if (timePo != time) {
+			timePo = time;
+			timeOr++;
+			if (timeOr % 1 == 0 && timeOr != 0) {
+				energia += luzFoto;
+			}
+		}
+
+	}
+
+	//// ***** GETTERS & SETTERS ******
+	public int getTotalEnergia() {
+		return energia;
+	}
+
+	public int getNumeroCabras() {
+		return cabras.size();
+	}
+
+	public int getNumeroCabrasFallecidas() {
+		return cabrasFallecidas;
+	}
+
+	public PApplet getApp() {
+		return app;
+	}
+
+}

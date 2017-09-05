@@ -1,0 +1,146 @@
+package visual_interface;
+
+import java.awt.*;
+import javax.swing.JOptionPane;
+import common.Message;
+import connect_to_arduino.Connect_to_arduino;
+import logic.Logic;
+import logic.Barn;
+import processing.core.*;
+
+public class Potrero extends PApplet {
+
+	private Logic logic;
+	private Connect_to_arduino arduino;
+	private int width, height, minutes, seconds, time_passed;
+	private PFont fuente;
+	private String time, st_minutes, st_seconds;
+
+	public static void main(String[] args) {
+		String[] a = { "MAIN" };
+		PApplet.runSketch(a, new Potrero());
+	} // main
+
+	public void settings() {
+		width = 1080;
+		height = 720;
+		size(width, height);
+	}// SETTINGS
+
+	public void setup() {
+		arduino = new Connect_to_arduino(this);
+		// ----- ESCRIBE AQU� LA IP DESEADA! -----
+		logic = new Logic(this, this, "localHost");
+		fuente = loadFont("../data/fonts/Roboto-Bold.vlw");
+		time = "";
+	}// SETUP
+
+	public void draw() {
+		int bg = (int) map(logic.getEnergy(), 0, 10000, 0, 100);
+		background(bg);
+		imageMode(CORNER);
+		logic.getBarn().draw();
+		drawInformation();
+		// updateBarn();
+	}// DRAW
+
+	public void drawInformation() {
+		fill(255);
+		textAlign(CENTER, CENTER);
+		textFont(fuente);
+
+		// Cabras------------------------------------
+		textSize(20);
+		text("Cabras: ", (width / 2) - (width / 3), 36);
+		textSize(45);
+		text(logic.getBarn().getNumberOfGoats(), (width / 2) - (width / 3) + 80, 40);
+		// Cabras------------------------------------
+
+		// Energia-----------------------------------
+		textSize(20);
+		text("Energy: ", (width / 2) - 100, 36);
+		textSize(45);
+		text((int) logic.getBarn().getEnergy(), (width / 2) + 30, 40);
+		// Energia-----------------------------------
+
+		// Luz---------------------------------------
+		textSize(20);
+		text("Luz entrante: ", (width / 2) + (width / 4), 36);
+		textSize(45);
+		text((int) arduino.getLight(), 930, 40);
+		// Luz---------------------------------------
+
+		// version--------------------------------------
+		textAlign(CORNER, CENTER);
+		textSize(18);
+		text("Versi�n: ", 20, height - 20);
+		textSize(20);
+		text("4.4", 100, height - 20);
+		// version--------------------------------------
+
+		// ID--------------------------------------
+		textSize(21);
+		text("ID: " + (logic.getBarn().getId() + 1), 20, height - 60);
+		// ID--------------------------------------
+
+		// timer--------------------------------------
+		calculate_time();
+		textAlign(RIGHT, CENTER);
+		textSize(18);
+		text("Time: ", width - 20, height - 60);
+		textSize(20);
+		text(time, width - 20, height - 40);
+		// timer--------------------------------------
+
+	}// draw barn and goats information
+
+	private void calculate_time() {
+		if (!logic.getBarn().isInit()) {
+			time_passed = millis();
+		} else {
+			seconds = ((millis() - time_passed) / 1000) % 60;
+			minutes = ((millis() - time_passed) / (1000 * 60)) % 60;
+
+			if (minutes < 10) {
+				st_minutes = "0" + minutes;
+			} else {
+				st_minutes = "" + minutes;
+			} // minutes
+
+			if (seconds < 10) {
+				st_seconds = "0" + seconds;
+			} else {
+				st_seconds = "" + seconds;
+			} // seconds
+
+			time = st_minutes + ":" + st_seconds;
+		} // initiated
+	}// calculates the time and express in minutes & secondss
+
+	public void mouseClicked() {
+		if (mouseButton == LEFT) {
+			logic.buyGoat();
+		} else if (mouseButton == RIGHT) {
+			logic.sacrificeGoat();
+		} // button pressed
+	}// mouse clicked
+
+	public void keyPressed() {
+		if (key == CODED) {
+			if (keyCode == UP) {
+				// logic.getBarn().gainEnergy(1000);
+			} // key UP
+		} // pressed
+	}// KEY
+
+	// --------------- GETTERS & SETTERS ---------------
+
+	public PApplet getAPplet() {
+		return this;
+	}// get app
+
+	public Connect_to_arduino getArduino() {
+		return arduino;
+	}
+
+}// INTERFAZ PRINCIPAL

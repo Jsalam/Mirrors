@@ -1,5 +1,6 @@
 import processing.core.PApplet;
 
+@SuppressWarnings("serial")
 public class Executable extends PApplet {
 	Logic log;
 	public void setup() {
